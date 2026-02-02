@@ -21,10 +21,10 @@ jobs:
 
       - name: Build Binary
         run: |
-          GOOS=linux GOARCH=amd64 go build -o golinks-linux-amd64 cmd/golink/main.go
+          GOOS=linux GOARCH=amd64 go build -o golink-linux-amd64 cmd/golink/main.go
 
       - name: Create Release and Upload
         uses: softprops/action-gh-release@v2
         with:
-          files: golinks-linux-amd64
+          files: golink-linux-amd64
         
