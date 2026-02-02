@@ -36,11 +36,15 @@ func Run(logger *slog.Logger) error {
 	server := &http.Server{
 		Addr: fmt.Sprintf(":%d", cfg.Port),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			short := strings.TrimPrefix(r.URL.Path, "/")
+			short := sanitizeUrlPath(r.URL.Path)
 			if short == "" {
-				w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte("Nothing to see here—try /<short>\n"))
+				sendNothingToSeeHere(w)
+				return
+			}
+
+			segments := strings.Split(short, "/")
+			if len(segments) > 1 {
+				sendNothingToSeeHere(w)
 				return
 			}
 
@@ -60,6 +64,12 @@ func Run(logger *slog.Logger) error {
 	logger.Info("golink listening", "addr", server.Addr)
 
 	return server.ListenAndServe()
+}
+
+func sendNothingToSeeHere(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("Nothing to see here—try /<short>\n"))
 }
 
 type Config struct {
@@ -119,4 +129,11 @@ func normalizeTarget(defaultScheme, long string) string {
 		return long
 	}
 	return defaultScheme + "://" + long
+}
+
+func sanitizeUrlPath(short string) string {
+	short = strings.ToLower(short)
+	short = strings.TrimPrefix(short, "/")
+	short = strings.TrimSuffix(short, "/")
+	return short
 }
